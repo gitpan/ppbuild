@@ -1,0 +1,30 @@
+use strict;
+use warnings;
+use ppbuild;
+
+Describe "Hi", "Prints 'Hi' using perl";
+Task "Hi", 'test.file', sub {
+    print "Hi!\n";
+};
+
+Describe "Bye", "Prints 'Bye' using the shell";
+Task "Bye", "Hi", <<EOT;
+echo "Bye!"
+EOT
+
+Describe "test.file", "Creates the 'test.file' file using shell";
+File "test.file", <<EOT;
+    touch test.file
+EOT
+
+Describe "test2.file", "Creates the 'test2.file' file using perl";
+File "test2.file", sub {
+    open( my $file, '>', "test2.file" );
+    print $file "Blah";
+    close( $file );
+};
+
+Describe "Runs Hi, Bye, test.file, and test2.file";
+Group "all", "Hi", "Bye", "test.file", "test2.file";
+
+1;

@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# If there is a ppbuild dir present then add it to @INC so the .ppb file can
+# access its support files.
+use lib "ppbuild";
+
+use ppbuild qw/ RunTask TaskList Describe /;
+
+use vars qw/ $tasks $file /;
+
+use Getopt::Long;
+GetOptions(
+    "tasks"     => \$tasks,
+    "help"      => \&help,
+    "file:s"    => \$file,
+);
+
+sub help {
+    print <<EOT;
+Usage: $0 [OPTIONS] Task1, Task2, ...
+
+Options:
+    --tasks | -t    Show a list of tasks
+    --help  | -h    Show this message
+    --file  | -f    Specify the .ppb file to use (Defaults to Makefile.ppb)
+
+$0 is used to build a perl project.
+
+EOT
+    exit( 0 );
+}
+
+$file ||= "Makefile.ppb";
+require $file;
+
+if ( $tasks ){
+    print "Available Tasks:\n";
+    my $length = 0;
+    for my $task ( TaskList() ) {
+        my $this = length( $task );
+        $length = $this if $this > $length;
+    }
+    for my $task ( TaskList() ) {
+        printf( " %-${length}s - \%s\n", $task, Describe( $task ));
+    }
+    print "\n";
+    exit( 0 );
+}
+
+die( "No Tasks specified!\n" ) unless @ARGV;
+
+for ( @ARGV ){
+    my $out = RunTask( $_ );
+    print $out if $out and $out !~ m/^\d+$/; #Do not print the default return of 1
+}
+print "\n";
+
